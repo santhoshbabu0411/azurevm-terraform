@@ -1,0 +1,65 @@
+trigger:
+- main
+
+pool:
+  name: 'new-agent-1'
+
+variables:
+  terraformVersion: '1.8.5'
+  serviceConnection: 'Azure-Service-Connection'
+  workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+stages:
+- stage: Terraform
+  displayName: 'Terraform Azure VM Creation'
+  jobs:
+  - job: TerraformJob
+    displayName: 'Create Azure VM using Terraform'
+    steps:
+
+    - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '$(terraformVersion)'
+
+    - script: terraform version
+      displayName: 'Check Terraform Version'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        workingDirectory: '$(workingDirectory)'
+        backendServiceArm: '$(serviceConnection)'
+        backendAzureRmResourceGroupName: 'rg-tfstate'
+        backendAzureRmStorageAccountName: 'tfstateaccount12345'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'vm-demo.tfstate'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Validate'
+      inputs:
+        provider: 'azurerm'
+        command: 'validate'
+        workingDirectory: '$(workingDirectory)'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Plan'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(workingDirectory)'
+        environmentServiceNameAzureRM: '$(serviceConnection)'
+        commandOptions: '-var="ssh_public_key=$(sshPublicKey)" -out=tfplan'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Apply'
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(workingDirectory)'
+        environmentServiceNameAzureRM: '$(serviceConnection)'
+        commandOptions: '-auto-approve tfplan'
