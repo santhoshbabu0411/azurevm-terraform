@@ -24,16 +24,11 @@ stages:
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         workingDirectory: '$(workingDirectory)'
-        inlineScript: |
-          echo "Checking Terraform version..."
-          terraform version
-
-          echo "Terraform Init..."
-          terraform init \
-            -backend-config="resource_group_name=rg-tfstate" \
-            -backend-config="storage_account_name=santhoshstorage01" \
-            -backend-config="container_name=tfstate" \
-            -backend-config="key=vm-demo.tfstate"
+        backendServiceArm: '$(serviceConnection)'
+        backendAzureRmResourceGroupName: 'rg-tfstate'
+        backendAzureRmStorageAccountName: 'tfstateaccount12345'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'vm-demo.tfstate'
 
           echo "Terraform Validate..."
           terraform validate
