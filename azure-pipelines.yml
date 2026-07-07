@@ -5,7 +5,6 @@ pool:
   name: 'new-agent-1'
 
 variables:
-  terraformVersion: '1.8.5'
   serviceConnection: 'Azure-Service-Connection'
   workingDirectory: '$(System.DefaultWorkingDirectory)'
 
@@ -16,50 +15,33 @@ stages:
   - job: TerraformJob
     displayName: 'Create Azure VM using Terraform'
     steps:
-
     - checkout: self
 
-    - task: TerraformInstaller@1
-      displayName: 'Install Terraform'
+    - task: AzureCLI@2
+      displayName: 'Terraform Init, Validate, Plan and Apply'
       inputs:
-        terraformVersion: '$(terraformVersion)'
-
-    - script: terraform version
-      displayName: 'Check Terraform Version'
-
-    - task: TerraformTaskV4@4
-      displayName: 'Terraform Init'
-      inputs:
-        provider: 'azurerm'
-        command: 'init'
+        azureSubscription: '$(serviceConnection)'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
         workingDirectory: '$(workingDirectory)'
-        backendServiceArm: '$(serviceConnection)'
-        backendAzureRmResourceGroupName: 'rg-tfstate'
-        backendAzureRmStorageAccountName: 'tfstateaccount12345'
-        backendAzureRmContainerName: 'tfstate'
-        backendAzureRmKey: 'vm-demo.tfstate'
+        inlineScript: |
+          echo "Checking Terraform version..."
+          terraform version
 
-    - task: TerraformTaskV4@4
-      displayName: 'Terraform Validate'
-      inputs:
-        provider: 'azurerm'
-        command: 'validate'
-        workingDirectory: '$(workingDirectory)'
+          echo "Terraform Init..."
+          terraform init \
+            -backend-config="resource_group_name=rg-tfstate" \
+            -backend-config="storage_account_name=santhoshstorage01" \
+            -backend-config="container_name=tfstate" \
+            -backend-config="key=vm-demo.tfstate"
 
-    - task: TerraformTaskV4@4
-      displayName: 'Terraform Plan'
-      inputs:
-        provider: 'azurerm'
-        command: 'plan'
-        workingDirectory: '$(workingDirectory)'
-        environmentServiceNameAzureRM: '$(serviceConnection)'
-        commandOptions: '-var="ssh_public_key=$(sshPublicKey)" -out=tfplan'
+          echo "Terraform Validate..."
+          terraform validate
 
-    - task: TerraformTaskV4@4
-      displayName: 'Terraform Apply'
-      inputs:
-        provider: 'azurerm'
-        command: 'apply'
-        workingDirectory: '$(workingDirectory)'
-        environmentServiceNameAzureRM: '$(serviceConnection)'
-        commandOptions: '-auto-approve tfplan'
+          echo "Terraform Plan..."
+          terraform plan \
+            -var="ssh_public_key=$(sshPublicKey)" \
+            -out=tfplan
+
+          echo "Terraform Apply..."
+          terraform apply -auto-approve tfplan
