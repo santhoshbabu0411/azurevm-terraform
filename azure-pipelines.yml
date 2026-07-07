@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  name: 'new-agent-1'
+  vmImage: 'ubuntu-latest'
 
 variables:
   serviceConnection: 'Azure-Service-Connection'
