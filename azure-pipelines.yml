@@ -10,33 +10,32 @@ variables:
 
 stages:
 - stage: Terraform
-  displayName: 'Terraform Azure VM Creation'
+  displayName: Terraform Azure VM Creation
   jobs:
   - job: TerraformJob
-    displayName: 'Create Azure VM using Terraform'
+    displayName: Create Azure VM using Terraform
     steps:
     - checkout: self
 
     - task: AzureCLI@2
-      displayName: 'Terraform Init, Validate, Plan and Apply'
+      displayName: Terraform Init Validate Plan Apply
       inputs:
         azureSubscription: '$(serviceConnection)'
-        scriptType: 'bash'
-        scriptLocation: 'inlineScript'
+        scriptType: bash
+        scriptLocation: inlineScript
         workingDirectory: '$(workingDirectory)'
-        backendServiceArm: '$(serviceConnection)'
-        backendAzureRmResourceGroupName: 'rg-tfstate'
-        backendAzureRmStorageAccountName: 'tfstateaccount12345'
-        backendAzureRmContainerName: 'tfstate'
-        backendAzureRmKey: 'vm-demo.tfstate'
+        inlineScript: |
+          echo "Checking Terraform version"
+          terraform version
 
-          echo "Terraform Validate..."
+          echo "Terraform Init"
+          terraform init -backend-config="resource_group_name=rg-tfstate" -backend-config="storage_account_name=santhoshstorage01" -backend-config="container_name=tfstate" -backend-config="key=vm-demo.tfstate"
+
+          echo "Terraform Validate"
           terraform validate
 
-          echo "Terraform Plan..."
-          terraform plan \
-            -var="ssh_public_key=$(sshPublicKey)" \
-            -out=tfplan
+          echo "Terraform Plan"
+          terraform plan -var="ssh_public_key=$(sshPublicKey)" -out=tfplan
 
-          echo "Terraform Apply..."
+          echo "Terraform Apply"
           terraform apply -auto-approve tfplan
