@@ -35,7 +35,7 @@ stages:
         workingDirectory: '$(workingDirectory)'
         backendServiceArm: '$(serviceConnection)'
         backendAzureRmResourceGroupName: 'rg-tfstate'
-        backendAzureRmStorageAccountName: 'tfstateaccount12345'
+        backendAzureRmStorageAccountName: 'santhoshstorage01'
         backendAzureRmContainerName: 'tfstate'
         backendAzureRmKey: 'vm-demo.tfstate'
 
