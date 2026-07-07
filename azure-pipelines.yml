@@ -7,6 +7,7 @@ pool:
 variables:
   serviceConnection: 'Azure-Service-Connection'
   workingDirectory: '$(System.DefaultWorkingDirectory)'
+  terraformVersion: '1.8.5'
 
 stages:
 - stage: Terraform
@@ -25,6 +26,11 @@ stages:
         scriptLocation: inlineScript
         workingDirectory: '$(workingDirectory)'
         inlineScript: |
+          echo "Installing Terraform"
+          wget -q https://releases.hashicorp.com/terraform/$(terraformVersion)/terraform_$(terraformVersion)_linux_amd64.zip
+          unzip -o terraform_$(terraformVersion)_linux_amd64.zip
+          sudo mv terraform /usr/local/bin/
+
           echo "Checking Terraform version"
           terraform version
 
